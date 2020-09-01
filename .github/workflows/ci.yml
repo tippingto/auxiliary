@@ -1,0 +1,97 @@
+name: Tipping Auxiliary Service Deployment(k8s.azure.dev)
+
+on:
+  push:
+    branches: [ dev ]
+
+env:
+  APP_NAMESPACE: dev
+  PROJECT_NAMESPACE: backend
+  PROJECT_NAME: auxiliary
+  DOCKERFILE: Dockerfile.k8s
+  RESOURCE_GROUP: DefaultResourceGroup-EA
+  CLUSTER_NAME: k8s
+  PROJECT_ROOT_PATH: .
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      app-version: ${{ steps.version.outputs.app-version }}
+      timestamp: ${{ steps.version.outputs.timestamp }}
+    strategy:
+      matrix:
+        java: [ 11 ]
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle-
+      - name: Build
+        run: |
+          $PROJECT_ROOT_PATH/gradlew build -x test -p $PROJECT_ROOT_PATH
+      - name: Version info
+        id: version
+        run: |
+          echo ::set-output name=app-version::$($PROJECT_ROOT_PATH/gradlew -p $PROJECT_ROOT_PATH properties -q | grep "^version:" | awk '{print $2}')
+          echo ::set-output name=timestamp::$(date "+%Y%m%d-%H%M%S")
+      - uses: Azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
+          username: ${{ secrets.AZURE_DOCKER_SEA_USERNAME }}
+          password: ${{ secrets.AZURE_DOCKER_SEA_PASSWORD }}
+      - name: Buid and push image
+        env:
+          APP_VERSION: ${{ steps.version.outputs.app-version }}
+          TIMESTAMP: ${{ steps.version.outputs.timestamp }}
+          DOCKER_REGISTRY: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
+        run: |
+          docker build -f $PROJECT_ROOT_PATH/$DOCKERFILE -t $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER $PROJECT_ROOT_PATH &&
+          docker push $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER &&
+          docker logout $DOCKER_REGISTRY
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Config
+        env:
+          APP_VERSION: ${{ needs.build.outputs.app-version }}
+          TIMESTAMP: ${{ needs.build.outputs.timestamp }}
+          DOCKER_REGISTRY: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
+          POD_NUM: 1
+          DEPLOYMENT_FILE: "deployment.yaml"
+          PORT: 8080
+        run: |
+          sed -i "s#APP_NAMESPACE#${APP_NAMESPACE}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#REPLICA#${POD_NUM}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#MY_PORT#${PORT}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#APP_NAME#${PROJECT_NAMESPACE}-${PROJECT_NAME}#g" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#MY_PROJECT#${PROJECT_NAMESPACE}#g" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#IMAGE_SHA#$DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#MY_APPNAME#${PROJECT_NAME}#g" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
+          sed -i "s#MY_NAMESPACE#${GITHUB_REF##*/}#g" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE}
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_DEV_CREDENTIALS }}'
+          resource-group: '${{ env.RESOURCE_GROUP }}'
+          cluster-name: '${{ env.CLUSTER_NAME }}'
+      - uses: Azure/k8s-deploy@v1
+        env:
+          APP_VERSION: ${{ needs.build.outputs.app-version }}
+          TIMESTAMP: ${{ needs.build.outputs.timestamp }}
+          DOCKER_REGISTRY: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
+        with:
+          namespace: ${{ env.APP_NAMESPACE }}
+          manifests: |
+            ${{ env.PROJECT_ROOT_PATH }}/deployment.yaml
+          images: |
+            $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER
