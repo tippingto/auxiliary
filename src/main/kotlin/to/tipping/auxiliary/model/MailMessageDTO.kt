@@ -1,6 +1,5 @@
 package to.tipping.auxiliary.model
 
-import to.tipping.auxiliary.service.vendor.mail.MailVendorHandler
 import to.tipping.auxiliary.utils.Type
 import java.util.*
 
@@ -13,6 +12,4 @@ class MailMessageDTO(
     init {
         router.type = Type.MAIL
     }
-
-    val vendorHandler: MailVendorHandler? = null
 }

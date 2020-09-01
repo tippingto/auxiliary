@@ -8,5 +8,5 @@ import to.tipping.auxiliary.model.ResultDTO
  */
 interface SenderService {
 
-    fun send(newsDTO: NewsDTO): ResultDTO
+    fun send(newsDTO: NewsDTO): Array<ResultDTO>
 }

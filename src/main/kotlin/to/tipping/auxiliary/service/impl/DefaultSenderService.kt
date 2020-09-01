@@ -26,12 +26,13 @@ class DefaultSenderService(
 
     companion object : LogUtils()
 
-    override fun send(newsDTO: NewsDTO): ResultDTO {
+    override fun send(newsDTO: NewsDTO): Array<ResultDTO> {
         val newsType = Type.forValue(newsDTO.type)
 
         var composeService: ComposeService? = null
         var vendorHandler: VendorHandler? = null
-        var resultDTO = ResultDTO(false)
+
+        var results = emptyArray<ResultDTO>()
 
         for (_composeService in composeServices) {
             if (_composeService.type() === newsType) {
@@ -51,15 +52,15 @@ class DefaultSenderService(
             val messageDTO = composeService.compose(newsDTO)
             val vendorDTO = vendorHandler.assemble(messageDTO)
 
-            TODO("save message to db")
+//            TODO("save message to db")
 
-            resultDTO = vendorHandler.send(vendorDTO, messageDTO)
+            results = vendorHandler.send(vendorDTO, messageDTO)
 
-            TODO("update message info in db")
+//            TODO("update message info in db")
         }
 
-        log.info("message result: {}", resultDTO)
+        log.info("message results: {}", results)
 
-        return resultDTO
+        return results
     }
 }

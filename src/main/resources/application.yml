@@ -1,3 +1,6 @@
+server:
+  servlet:
+    context-path: /auxiliary
 spring:
 #  redis:
 #    host: 52.184.84.112
@@ -16,6 +19,9 @@ spring:
 #      maximum-pool-size: 5
 #      auto-commit: false
 #      max-lifetime: 18000000
+  jackson:
+    default-property-inclusion: non_null
+    serialization.write_dates_as_timestamps: true
   mail:
     host: in-v3.mailjet.com
     port: 587
@@ -42,3 +48,16 @@ logging:
       springframework: ERROR
     to:
       tipping: DEBUG
+email:
+  mailjet:
+    method: smtp
+    smtp: in-v3.mailjet.com
+    port: 587
+    username: 5c2b330cc21d9fa404b434810e677f3b
+    password: 2f393e0eb0a173984d9e8058716125ea
+    smtp-auth: true
+    tls-enable: true
+    ssl-enable: true
+    from: no-reply@tipping.to
+    from-name: no-reply
+    batch-size: 20

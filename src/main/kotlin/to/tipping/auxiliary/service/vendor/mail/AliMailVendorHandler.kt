@@ -27,7 +27,7 @@ class AliMailVendorHandler : MailVendorHandler() {
         return vendorDTO
     }
 
-    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): ResultDTO {
+    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): Array<ResultDTO> {
         val resultDTO: ResultDTO = composeResultDTO(vendorDTO, messageDTO)
         val isOk = sendMail(
             vendorDTO.tos, null, null,
@@ -40,7 +40,7 @@ class AliMailVendorHandler : MailVendorHandler() {
             resultDTO.state = State.ERROR
             resultDTO.success = false
         }
-        return resultDTO
+        return emptyArray()
     }
 
     private fun sendMail(

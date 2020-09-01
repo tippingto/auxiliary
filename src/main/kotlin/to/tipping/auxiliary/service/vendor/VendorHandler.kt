@@ -12,7 +12,7 @@ interface VendorHandler {
 
     fun assemble(messageDTO: MessageDTO): VendorDTO
 
-    fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): ResultDTO
+    fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): Array<ResultDTO>
 
     fun isOnline(): Boolean
 

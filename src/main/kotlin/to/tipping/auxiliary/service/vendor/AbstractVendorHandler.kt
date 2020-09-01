@@ -11,7 +11,7 @@ import to.tipping.auxiliary.utils.State
 abstract class AbstractVendorHandler : VendorHandler {
 
     protected fun composeResultDTO(vendorDTO: VendorDTO, messageDTO: MessageDTO): ResultDTO {
-        val resultDTO = ResultDTO()
+        val resultDTO = ResultDTO(true)
         resultDTO.msgId = messageDTO.msgId
         resultDTO.vendor = vendorDTO.vendor
         resultDTO.type = messageDTO.router.type

@@ -39,7 +39,7 @@ class YunpianSmsVendorHandler(
     }
 
     @SneakyThrows
-    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): ResultDTO {
+    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): Array<ResultDTO> {
 
 //        YunpianClient clnt = new YunpianClient(yunpianSmsVendorProperties.getApiKey()).init();
 //
@@ -72,6 +72,6 @@ class YunpianSmsVendorHandler(
 //
 //        //最后释放client
 //        clnt.close();
-        return ResultDTO()
+        return emptyArray()
     }
 }

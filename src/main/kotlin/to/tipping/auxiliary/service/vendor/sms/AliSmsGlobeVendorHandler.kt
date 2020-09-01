@@ -37,7 +37,7 @@ class AliSmsGlobeVendorHandler(
     }
 
     @SneakyThrows
-    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): ResultDTO {
+    override fun send(vendorDTO: VendorDTO, messageDTO: MessageDTO): Array<ResultDTO> {
 
 //        CommonRequest request = new CommonRequest();
 //        request.setMethod(MethodType.POST);
@@ -71,6 +71,6 @@ class AliSmsGlobeVendorHandler(
 //            resultDTO.setState(State.ERROR);
 //            resultDTO.setSuccess(false);
 //        }
-        return ResultDTO()
+        return emptyArray()
     }
 }

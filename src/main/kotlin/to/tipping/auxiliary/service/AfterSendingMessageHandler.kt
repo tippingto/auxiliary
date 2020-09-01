@@ -7,5 +7,5 @@ import to.tipping.auxiliary.model.ResultDTO
  */
 interface AfterSendingMessageHandler {
 
-    fun after(resultDTO: ResultDTO)
+    fun after(results: Array<ResultDTO>)
 }
