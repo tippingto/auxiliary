@@ -1,0 +1,44 @@
+spring:
+#  redis:
+#    host: 52.184.84.112
+#    port: 16379
+#    password: "7uTk6PR1j6ESEpC9cz6Z"
+#    database: 0
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://52.184.84.112:13306/passport?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+#    username: local
+#    password: "VN6dQewGryTbqin8eQ24"
+#    hikari:
+#      pool-name: passport-pool
+#      connection-test-query: SELECT 1
+#      minimum-idle: 1
+#      maximum-pool-size: 5
+#      auto-commit: false
+#      max-lifetime: 18000000
+  mail:
+    host: in-v3.mailjet.com
+    port: 587
+    username: 5c2b330cc21d9fa404b434810e677f3b
+    password: 2f393e0eb0a173984d9e8058716125ea
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+management:
+  endpoint:
+    health:
+      show-details: always
+  health:
+    rabbit:
+      enabled: false
+logging:
+  pattern:
+    console: '[%yellow(%d{yyyyMMdd HHmmss})]-[%highlight(%-5level)]-[%cyan(%thread %logger{30})]-[%gray(%msg)]%n'
+  level:
+    org:
+      springframework: ERROR
+    to:
+      tipping: DEBUG
