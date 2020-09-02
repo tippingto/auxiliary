@@ -42,6 +42,7 @@ jobs:
         run: |
           echo ::set-output name=app-version::$($PROJECT_ROOT_PATH/gradlew -p $PROJECT_ROOT_PATH properties -q | grep "^version:" | awk '{print $2}')
           echo ::set-output name=timestamp::$(date "+%Y%m%d-%H%M%S")
+          wget -O $DOCKERFILE https://raw.githubusercontent.com/tippingto/build/dev/template/java/Dockerfile.k8s
       - uses: Azure/docker-login@v1
         with:
           login-server: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
@@ -71,6 +72,7 @@ jobs:
           DEPLOYMENT_FILE: "deployment.yaml"
           PORT: 8080
         run: |
+          wget -O ${DEPLOYMENT_FILE} https://raw.githubusercontent.com/tippingto/build/dev/template/java/deployment.yaml &&
           sed -i "s#APP_NAMESPACE#${APP_NAMESPACE}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
           sed -i "s#REPLICA#${POD_NUM}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
           sed -i "s#MY_PORT#${PORT}#" ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} &&
