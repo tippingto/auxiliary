@@ -8,7 +8,8 @@ env:
   APP_NAMESPACE: dev
   PROJECT_NAMESPACE: backend
   PROJECT_NAME: auxiliary
-  DOCKERFILE: Dockerfile.k8s
+  DOCKER_FILE: Dockerfile.k8s
+  DEPLOYMENT_FILE: deployment.yaml
   RESOURCE_GROUP: DefaultResourceGroup-EA
   CLUSTER_NAME: k8s
   PROJECT_ROOT_PATH: .
@@ -42,7 +43,7 @@ jobs:
         run: |
           echo ::set-output name=app-version::$($PROJECT_ROOT_PATH/gradlew -p $PROJECT_ROOT_PATH properties -q | grep "^version:" | awk '{print $2}')
           echo ::set-output name=timestamp::$(date "+%Y%m%d-%H%M%S")
-          wget -O $PROJECT_ROOT_PATH/$DOCKERFILE https://raw.githubusercontent.com/tippingto/build/dev/template/java/Dockerfile.k8s
+          wget -O $PROJECT_ROOT_PATH/$DOCKER_FILE https://raw.githubusercontent.com/tippingto/build/dev/template/java/Dockerfile.k8s
       - uses: Azure/docker-login@v1
         with:
           login-server: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
@@ -54,7 +55,7 @@ jobs:
           TIMESTAMP: ${{ steps.version.outputs.timestamp }}
           DOCKER_REGISTRY: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
         run: |
-          docker build -f $PROJECT_ROOT_PATH/$DOCKERFILE -t $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER $PROJECT_ROOT_PATH &&
+          docker build -f $PROJECT_ROOT_PATH/$DOCKER_FILE -t $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER $PROJECT_ROOT_PATH &&
           docker push $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER &&
           docker logout $DOCKER_REGISTRY
 
@@ -69,7 +70,6 @@ jobs:
           TIMESTAMP: ${{ needs.build.outputs.timestamp }}
           DOCKER_REGISTRY: ${{ secrets.AZURE_DOCKER_SEA_REGISTRY }}
           POD_NUM: 1
-          DEPLOYMENT_FILE: deployment.yaml
           PORT: 8080
         run: |
           wget -O ${PROJECT_ROOT_PATH}/${DEPLOYMENT_FILE} https://raw.githubusercontent.com/tippingto/build/dev/template/java/deployment.yaml &&
@@ -95,6 +95,6 @@ jobs:
         with:
           namespace: ${{ env.APP_NAMESPACE }}
           manifests: |
-            ${{ env.PROJECT_ROOT_PATH }}/${{ env.DEPLOYMENT_FILE }}
+            ${{ env.DEPLOYMENT_FILE }}
           images: |
             $DOCKER_REGISTRY/$PROJECT_NAMESPACE/$PROJECT_NAME:$APP_VERSION-$TIMESTAMP-$GITHUB_RUN_ID-$GITHUB_RUN_NUMBER
